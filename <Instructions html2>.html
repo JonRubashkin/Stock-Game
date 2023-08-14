@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invest GPT</title>
+    <style>
+        /* CSS styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #bcc0cd;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: left;
+            padding-bottom: 40px; 
+}
+
+        .title {
+            text-align: center;
+            color: #022e17;
+        }
+
+        .menu {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .menu-link {
+            margin: 10px;
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .menu-link:hover {
+            background-color: #2980b9;
+        }
+
+        .back-to-game {
+            display: block;
+            margin-top: 20px;
+            text-align: center;
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        .back-to-game:hover {
+            text-decoration: underline;
+        }
+
+        .made-by {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            padding: 10px;
+            background-color: #302e2e;
+            color: #888;
+            font-size: 12px;
+        }
+
+        .readInstructions {
+            text-align: left;
+            color: #022e17;
+        }
+        
+        .bold-text {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Game Options</h1>
+        <div class="instructions">
+            <p class="bold-text">Select AI Outlook Investment Quality:</p>
+            <p>If the AI Outlook Investment Quality is higher the investment predictions will be more accurate. Investment Outlook information will be avalible in your game log automatically from the 2nd day of investing,</p>
+            <div class="instructions">
+            <p><label><input type="radio" name="AIQuality" value="advanced"> Advanced AI </label></p>
+            <p><label><input type="radio" name="AIQuality" value="medium">  AI From Last Year </label></p>
+            <p><label><input type="radio" name="AIQuality" value="updateNeeded">Buggy AI </label></p>
+        </div>
+
+        <div class="instructions">
+            <p class="bold-text">Select Investor Type:</p>
+            <p>Higher level investors will expect greater returns which may require clever ways of investing. It is recommended to start at the Easy Investor level.</p>
+            <p><label><input type="radio" name="investorType" value="easy"> Easy Investor</label></p>
+            <p><label><input type="radio" name="investorType" value="medium"> Medium Investor</label></p>
+            <p><label><input type="radio" name="investorType" value="difficult"> Difficult Investor</label></p>
+            <p><label><input type="radio" name="investorType" value="crazy"> Crazy Investor</label></p>
+            <p><button onclick="setGoal()" class="menu-link">Confirm Options and Start the Game</button></p>
+        </div>
+    </div>
+    <div style="height: 20px;"></div>
+    <div class="made-by">
+        <p>Made by Jon</p>
+    </div>
+
+
+    <script>
+
+
+        function setGoal() {
+                const investorTypeRadio = document.querySelector('input[name="investorType"]:checked');
+                const AIQualityRadio = document.querySelector('input[name="AIQuality"]:checked');
+
+                if (investorTypeRadio && AIQualityRadio) {
+                    const investorType = investorTypeRadio.value;
+                    const AIQuality = AIQualityRadio.value;
+
+                    localStorage.setItem('investorType', investorType);
+                    localStorage.setItem('AIQuality', AIQuality);
+
+                    // Redirect the user to the game page
+                    window.location.href = '<StockGame>.html';
+                } else {
+                    alert('Please select both an investor type and an AI quality.');
+                }
+            }
+
+        // Get the goal percentage input and pass it to the game page
+        const goalPercentage = parseFloat(document.getElementById('goalPercentageInput').value);
+        localStorage.setItem('goalPercentage', goalPercentage);
+
+    </script>
+</body>
+</html>

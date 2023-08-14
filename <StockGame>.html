@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invest GPT</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        /* Additional CSS */
+        #investor-portfolio-date {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 10px; 
+        }
+
+        /* Custom styles */
+        body {
+            background-color: #bcc0cd; 
+        }
+
+        p {
+            color: #022e17;
+        }
+
+        .btn {
+            height: 38px; /* Adjust this value as needed to match the desired button height */
+            line-height: 1.5; /* Ensure proper alignment of button text */
+        }
+
+ 
+
+        #gameLog {
+            background-color: #afe1c5; 
+            padding: 10px; /* Add some padding to the game log */
+            height: calc(20vh - 20px); /* Automatically set height to 5% of viewport height minus padding */
+            width: 95%; /* Set the game log width to 95% of the viewport width */
+            position: fixed; /* Position the game log as a fixed element */
+            bottom: 0; /* Position it at the bottom of the screen */
+            left: 50%; /* Center the game log horizontally */
+            transform: translateX(-50%); /* Adjust to center-align the element */
+            overflow-y: auto; /* Enable vertical scrolling when content exceeds the height */
+            line-height: 1.0; /* Set the line height for the text */
+        }
+
+        /* Adjust the width of the left column to make space for the game log */
+        .col-md-6.adjust-width {
+            width: 50%; /* Set the width to 50% to make room for the game log */
+            padding-right: 15px; /* Add a little space to the right of the left column */
+        }
+
+        /* Make the container element scrollable */
+        .container {
+            max-height: 75vh; /* Set the maximum height to 75% of viewport height */
+            overflow-y: auto; /* Enable vertical scrolling when content exceeds the height */
+        }
+
+       /* Styles for the "Investor Portfolio" section */
+       .investor-portfolio {
+            color: #022e17;
+
+        }
+
+        /* Styles for the values inside the "Investor Portfolio" section */
+        .investor-value {
+            color: #022e17;
+            font-weight: bold; 
+        }
+
+        .currentDate {
+            color: #022e17;
+            font-weight: bold; 
+        }
+
+        .days-remaining {
+            color: #022e17;
+            font-weight: bold; 
+        }
+
+
+        .buy-sell-input {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        #buyMaxButton {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .btn-purple {
+            background-color: #591544; 
+            color: white; 
+        }
+        
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">Invest GPT</h1>
+        <div class="row">
+            <div class="col-md-6">
+                <!-- Investor Portfolio -->
+                <h2>Investor Portfolio</h2>
+                <p><strong>Cash Balance:</strong> <span class="investor-value" id="cashBalance">10000.00</span></p>
+                <p><strong>Total Portfolio Value:</strong> <span class="investor-value" id="portfolioValue">10000.00</span></p>
+                <p><strong>Goal:</strong> <span class="investor-value" id="goal">15000.00</span></p>
+                <p><strong>Current Date:</strong> <span class="currentDate" id="currentDate">January 1, 2025</span></p>
+                <p><strong>Days Remaining:</strong> <span class="days-remaining" id="days-remaining">20</span></p>
+                <p><strong>Investments:</strong></p>
+                <ul id="investmentsList">
+                </ul>
+
+            </div>
+            <div class="col-md-6">
+                <h2>Available Investments</h2>
+                <select id="investmentDropdown" class="form-control mb-2">
+                    <option value="0">Select an Investment</option>
+                </select>
+                <div class="buy-sell-input">
+                    <div class="input-group">
+                        <input type="number" id="quantityInput" class="form-control" placeholder="Enter Quantity">
+                        <div class="input-group-append">
+                            <button id="buyButton" class="btn btn-primary">Buy</button>
+                            <button id="buyMaxButton" class="btn btn-success">Buy Max</button>
+                            <button id="sellButton" class="btn btn-danger">Sell</button>
+                            <button id="sellAllButton" class="btn btn-purple">Sell All</button>
+                        </div>
+                    </div>
+                </div>
+                <canvas id="portfolioChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 adjust-width">
+                <button id="endTurnButton" class="btn btn-success mt-3">End Turn</button>
+                <a href="#" id="restartButton" class="btn btn-danger mt-3 d-none">Restart Game</a>
+                <a <a href="<Instructions html2>.html" id="LevelSelect" class="btn btn-primary mt-3 d-none">Change Difficulty?</a>
+                <h2>Game Log & Investment Outlooks</h2>
+            </div>
+            <div class="col-md-6">
+                <div id="gameLog"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            updateOutlook();
+            const goalPercentage = parseFloat(localStorage.getItem('goalPercentage'));
+            if (!isNaN(goalPercentage)) {
+                const startingPortfolio = 10000.00; // Your starting portfolio value
+                const goalAmount = startingPortfolio * (1 + goalPercentage / 100);
+    
+                // Update the goal element on the game page if it's not already changed by the player
+                const goalElement = document.getElementById('goal');
+                if (goalElement.textContent.trim() === '15000.00') {
+                    goalElement.textContent = goalAmount.toFixed(2);
+                }
+            }
+        });
+    </script>
+    
+ 
+
+
+    <script>
+        // JavaScript code
+
+            let previousPortfolioValue = 0;
+            let outlookRandom = 0.05;
+
+        // Listen for the DOMContentLoaded event
+        document.addEventListener('DOMContentLoaded', function() {
+            const investorType = localStorage.getItem('investorType');
+            let goalPercentage;
+
+            if (investorType === 'easy') {
+                goalPercentage = 30;
+            } else if (investorType === 'medium') {
+                goalPercentage = 60;
+            } else if (investorType === 'difficult') {
+                goalPercentage = 100;
+            } else if (investorType === 'crazy') {
+                goalPercentage = 150;
+            } else {
+                // Default to a reasonable goal percentage if no investor type is selected
+                goalPercentage = 60;
+            }
+
+            const startingPortfolio = 10000.00; // Your starting portfolio value
+            const goalAmount = startingPortfolio * (1 + goalPercentage / 100);
+
+            const goalElement = document.getElementById('goal');
+            goalElement.textContent = goalAmount.toFixed(2);
+        });
+
+        // Listen for the DOMContentLoaded event
+        document.addEventListener('DOMContentLoaded', function() {
+            const AIQuality = localStorage.getItem('AIQuality');
+
+            // Update the outlookRandom value based on AIQuality
+            if (AIQuality === 'advanced') {
+                outlookRandom = 0.05;
+            } else if (AIQuality === 'medium') {
+                outlookRandom = 0.075;
+            } else if (AIQuality === 'updateNeeded') {
+                outlookRandom = 0.1;
+            } else {
+                outlookRandom = 0.05;
+            }
+
+
+        });
+ 
+
+
+                // Investment class
+                class Investment {
+                    constructor(type, price, growthRate, outlook) {
+                        this.type = type;
+                        this.price = price;
+                        this.growthRate = growthRate;
+                        this.outlook = outlook;
+                    }
+
+            calculateReturn() {
+                const outlookIndex = ["Great", "Good", "Stable", "Poor", "Bad"].indexOf(this.outlook);
+                const baseReturn = this.growthRate * 100;
+
+                // Determine the return range based on outlook
+                let lowerBound, upperBound;
+                switch (outlookIndex) {
+                    case 0: // Great
+                        lowerBound = 0.6;
+                        upperBound = 1.0;
+                        break;
+                    case 1: // Good
+                        lowerBound = 0.1;
+                        upperBound = 0.6;
+                        break;
+                    case 2: // Stable
+                        lowerBound = -0.05;
+                        upperBound = 0.15;
+                        break;
+                    case 3: // Poor
+                        lowerBound = -0.25;
+                        upperBound = -0.05;
+                        break;
+                    case 4: // Bad
+                        lowerBound = -1.0;
+                        upperBound = -0.25;
+                        break;
+                    default:
+                        lowerBound = 0;
+                        upperBound = 0;
+                }
+
+                // Calculate the actual return within the specified range
+                const randomReturn = (Math.random() * (upperBound - lowerBound) + lowerBound) * baseReturn;
+                return randomReturn;
+            }
+        }
+        function updateOutlook() {
+            const outlooks = ["Great", "Good", "Stable", "Poor", "Bad"];
+            for (const investment of investments) {
+                const randomIndex = Math.floor(Math.random() * outlooks.length);
+                investment.outlook = outlooks[randomIndex];
+            }
+        }
+
+
+        // Player class
+        class Player {
+            constructor(cash) {
+                this.cash = cash;
+                this.investments = {};
+            }
+
+            buyInvestment(investment, quantity) {
+                const totalCost = investment.price * quantity;
+                if (this.cash >= totalCost) {
+                    this.cash -= totalCost;
+                    if (investment.type in this.investments) {
+                        this.investments[investment.type] += quantity;
+                    } else {
+                        this.investments[investment.type] = quantity;
+                    }
+                    return `You bought ${quantity} ${investment.type} shares.`;
+                } else {
+                    return "Insufficient funds to make the purchase.";
+                }
+            }
+
+                    
+            sellInvestment(investmentType, quantity) {
+                const investment = investments.find(i => i.type === investmentType);
+                const currentShares = this.investments[investmentType] || 0;
+
+                if (currentShares >= quantity && quantity > 0) {
+                    this.cash += investment.price * quantity;
+                    this.investments[investmentType] -= quantity;
+                    return `You sold ${quantity} ${investmentType} shares.`;
+                } else if (quantity <= 0) {
+                    return "Invalid input. Please enter a valid quantity greater than zero.";
+                } else {
+                    return "You do not have enough shares to sell.";
+                }
+            }
+        
+
+            calculatePortfolioValue() {
+                let portfolioValue = this.cash;
+                for (const type in this.investments) {
+                    const investment = investments.find(i => i.type === type);
+                    portfolioValue += this.investments[type] * investment.price;
+                }
+                return portfolioValue.toFixed(2);
+            }
+        }
+
+        // Investment options
+        const investments = [
+            new Investment("Bonds", 100, 0.01), // 1% fluctuation
+            new Investment("Conservative Stocks", 200, 0.03), // 3% fluctuation
+            new Investment("Middle Stocks", 300, 0.05), // 5% fluctuation
+            new Investment("Growth Stocks", 500, 0.12), // 12% fluctuation
+            new Investment("Crypto Currency", 1000, 0.20) // 20% fluctuation
+        ];
+
+         // Function to update the investor portfolio information
+        function updatePortfolio() {
+            const investmentsList = document.getElementById("investmentsList");
+            investmentsList.innerHTML = "";
+            for (const investment of investments) {
+                const investmentShares = player.investments[investment.type] || 0;
+                const investmentPricePerUnit = investment.price.toFixed(2);
+                const investmentTotalValue = (investmentShares * investment.price).toFixed(2);
+                investmentsList.innerHTML += `<li>
+                    ${investment.type}: ${investmentShares} shares
+                    (Price per unit: $${investmentPricePerUnit}, Total value: $${investmentTotalValue})
+                </li>`;
+                
+            }
+            document.getElementById("portfolioValue").innerText = player.calculatePortfolioValue();
+            
+        }
+
+        // Initialize player
+        const player = new Player(10000);
+
+
+        let currentDate = new Date(2025, 0, 1); // January 1, 2025
+        let remainingDays = 20;
+
+
+         // Function to update the number of days remaining and check for game over
+         function updateDaysRemaining() {
+            remainingDays--;
+            const daysRemainingElement = document.querySelector('.days-remaining');
+            daysRemainingElement.innerText = remainingDays;
+
+            // Check if the goal is reached or the deadline is reached
+            const goal = parseFloat(document.getElementById('goal').innerText);
+            const portfolioValue = player.calculatePortfolioValue();
+            if (portfolioValue >= goal) {
+                // Goal reached, show success message
+                addToGameLog("Congratulations! You have reached your financial goal!");
+                addToGameLog("Thank you for playing!");
+                document.getElementById("endTurnButton").classList.add("d-none");
+                document.getElementById("restartButton").classList.remove("d-none");
+                document.getElementById("LevelSelect").classList.remove("d-none");
+            } else if (remainingDays === 0) {
+                // Deadline reached, show game over message
+                addToGameLog("Game Over! You did not reach your financial goal within the given timeframe.");
+                addToGameLog("Thank you for playing!");
+                document.getElementById("endTurnButton").classList.add("d-none");
+                document.getElementById("restartButton").classList.remove("d-none");
+                document.getElementById("LevelSelect").classList.remove("d-none");
+            }
+        }
+
+        // Function to display player portfolio and available investments
+        function displayPortfolio() {
+                    document.getElementById("cashBalance").innerText = player.cash.toFixed(2);
+                    const investmentsList = document.getElementById("investmentsList");
+                    investmentsList.innerHTML = "";
+                    const investmentDropdown = document.getElementById("investmentDropdown");
+                    investmentDropdown.innerHTML = "<option value='0'>Select an Investment</option>";
+                    for (const investment of investments) {
+                        const investmentShares = player.investments[investment.type] || 0;
+                        const investmentPricePerUnit = investment.price.toFixed(2);
+                        const investmentTotalValue = (investmentShares * investment.price).toFixed(2);
+                        investmentsList.innerHTML += `<li>
+                            ${investment.type}: ${investmentShares} shares
+                            (Price per unit: $${investmentPricePerUnit}, Total value: $${investmentTotalValue})
+                        </li>`;
+                        investmentDropdown.innerHTML += `<option value="${investmentDropdown.length}">${investment.type} ($${investment.price.toFixed(2)})</option>`;
+                    }
+                }
+
+        // Function to simulate monthly growth and update investment prices
+        function simulateGrowth() {
+            for (const investment of investments) {
+                const outlookIndex = ["Great", "Good", "Stable", "Poor", "Bad"].indexOf(investment.outlook);
+                const minFluctuation = 1 - investment.growthRate;
+                const maxFluctuation = 1 + investment.growthRate;
+                let growthPercentage;
+
+                // Adjust growthPercentage based on the outlook
+                switch (outlookIndex) {
+                    case 0: // Great
+                    case 1: // Good
+                        growthPercentage = Math.random() * (maxFluctuation - 1) + 1;
+                        break;
+                    case 2: // Stable
+                        const stableMin = Math.max(minFluctuation, 1 - 0.1); // Ensure minimum growth is within -10%
+                        const stableMax = Math.min(maxFluctuation, 1 + 0.1); // Ensure maximum growth is within +10%
+                        growthPercentage = Math.random() * (stableMax - stableMin) + stableMin;
+                        break;
+                    case 3: // Poor
+                    case 4: // Bad
+                        growthPercentage = Math.random() * (1 - minFluctuation) + minFluctuation;
+                        break;
+                    default:
+                        growthPercentage = 1;
+                }
+
+                    // Introduce a % chance of inverting gains or losses for randmoness of outlook
+                    if (Math.random() < outlookRandom) {
+                        growthPercentage = 1 / growthPercentage;
+                    }
+
+                investment.price *= growthPercentage;
+                investment.price = Math.max(0, investment.price); // Ensure price doesn't go below zero
+            }
+
+            updateOutlook(); // Update the outlook for each investment
+
+            // Display the outlook information in the game log
+            for (const investment of investments) {
+                addToGameLog(`${investment.type}: Outlook - ${investment.outlook}`);
+            }
+
+            updateInvestmentDropdown(); // Update the investment dropdown with the updated price information
+        }
+
+        // Function to handle buying an investment
+        function buyInvestment() {
+            const investmentDropdown = document.getElementById("investmentDropdown");
+            const quantityInput = document.getElementById("quantityInput");
+
+            const investmentIndex = investmentDropdown.value;
+            const quantity = parseInt(quantityInput.value);
+
+            if (investmentIndex >= 1 && investmentIndex <= investments.length && quantity > 0) {
+                const investment = investments[investmentIndex - 1];
+                const result = player.buyInvestment(investment, quantity);
+                displayPortfolio();
+                updateInvestmentDropdown();
+                addToGameLog(result);
+            } else {
+                addToGameLog("Invalid input. Please select an investment and enter a valid quantity.");
+            }
+        }
+
+        function buyMaxInvestments() {
+            const selectedInvestmentIndex = document.getElementById("investmentDropdown").selectedIndex;
+            if (selectedInvestmentIndex !== 0) {
+                const selectedInvestment = investments[selectedInvestmentIndex - 1];
+                const investmentPrice = selectedInvestment.price;
+                const maxQuantity = Math.floor(player.cash / investmentPrice);
+                if (maxQuantity > 0) {
+                    const quantityInput = document.getElementById("quantityInput");
+                    quantityInput.value = maxQuantity; // Set the value of the quantity input box
+                    buyInvestment(); // Call the buyInvestment function
+                } else {
+                    addToGameLog("Insufficient funds to make a purchase.");
+                }
+            }
+        }
+
+        // Function to handle selling an investment
+        function sellInvestment() {
+            const investmentDropdown = document.getElementById("investmentDropdown");
+            const quantityInput = document.getElementById("quantityInput");
+
+            const investmentIndex = investmentDropdown.value;
+            const quantity = parseInt(quantityInput.value);
+
+            if (investmentIndex >= 1 && investmentIndex <= investments.length && quantity > 0) {
+                const investment = investments[investmentIndex - 1];
+                const result = player.sellInvestment(investment.type, quantity);
+                displayPortfolio();
+                addToGameLog(result);
+            } else {
+                addToGameLog("Invalid input. Please select an investment and enter a valid quantity.");
+            }
+        }
+
+        function buyMaxInvestments() {
+            const selectedInvestmentIndex = document.getElementById("investmentDropdown").selectedIndex;
+            if (selectedInvestmentIndex !== 0) {
+                const selectedInvestment = investments[selectedInvestmentIndex - 1];
+                const investmentPrice = selectedInvestment.price;
+                const maxQuantity = Math.floor(player.cash / investmentPrice);
+                if (maxQuantity > 0) {
+                    const quantityInput = document.getElementById("quantityInput");
+                    quantityInput.value = maxQuantity; // Fill the quantity input box with maxQuantity
+                    buyInvestment(); // Call the buyInvestment function without arguments
+                } else {
+                    addToGameLog("Insufficient funds to make a purchase.");
+                }
+            }
+        }
+
+
+        function sellAllShares() {
+            const selectedInvestmentIndex = document.getElementById("investmentDropdown").selectedIndex;
+            if (selectedInvestmentIndex !== 0) {
+                const selectedInvestment = investments[selectedInvestmentIndex - 1];
+                const investmentType = selectedInvestment.type;
+                const currentShares = player.investments[investmentType] || 0;
+                if (currentShares > 0) {
+                    const quantityInput = document.getElementById("quantityInput");
+                    quantityInput.value = currentShares; // Set the value of the quantity input box
+                    sellInvestment(); // Call the sellInvestment function
+                } else {
+                    addToGameLog(`You do not have any ${investmentType} shares to sell.`);
+                }
+            }
+        }
+
+                const portfolioData = [];
+                const dates = [];
+            
+
+        // Initialize the chart once
+        const portfolioChart = new Chart(document.getElementById("portfolioChart").getContext("2d"), {
+            type: "line",
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: "Portfolio Value",
+                        data: [],
+                        borderColor: "rgba(75, 192, 192, 1)",
+                        borderWidth: 2,
+                        fill: false,
+                    },
+                ],
+            },
+            options: {
+                scales: {
+                    x: {
+                        type: "category",
+                        title: {
+                            display: true,
+                            text: "Date",
+                        },
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: "Portfolio Value ($)",
+                        },
+                    },
+                },
+            },
+        });
+
+
+        
+        // Function to handle ending the turn
+        function endTurn() {
+
+            simulateGrowth();
+
+
+            currentDate.setDate(currentDate.getDate() + 1); // Move the date forward by one day
+            const portfolioValue = player.calculatePortfolioValue();
+            addToGameLog(`End of turn. Date: ${getFormattedDate(currentDate)}. Portfolio value: $${portfolioValue}`);
+            updateInvestmentDropdown();
+            updateDate();
+            updatePortfolio(); // Update the investor portfolio information
+            updateDaysRemaining(); // Update the number of days remaining and check for game over
+
+            if (remainingDays === 0) {
+                document.getElementById("endTurnButton").classList.add("d-none");
+                document.getElementById("restartButton").classList.remove("d-none");
+            }
+
+            // Add portfolio value and date to the arrays
+            portfolioData.push(parseFloat(portfolioValue));
+            dates.push(getFormattedDate(currentDate));
+
+            // Add portfolio value and date to the chart's dataset
+            portfolioChart.data.labels.push(getFormattedDate(currentDate));
+            portfolioChart.data.datasets[0].data.push(parseFloat(portfolioValue));
+
+            // Update the chart
+            portfolioChart.update();
+
+        }
+            
+    
+        
+
+        // Function to update the investment dropdown options
+        function updateInvestmentDropdown() {
+            const investmentDropdown = document.getElementById("investmentDropdown");
+            for (let i = 0; i < investments.length; i++) {
+                const investment = investments[i];
+                const newPrice = investment.price.toFixed(2);
+                investmentDropdown.options[i + 1].innerText = `${investment.type} ($${newPrice})`;
+            }
+        }
+
+        // Function to add a log message to the game log
+        function addToGameLog(message) {
+            const gameLog = document.getElementById("gameLog");
+            gameLog.innerHTML += `<li>${message}</li>`;
+        }
+
+        // Event listeners
+        document.getElementById("buyButton").addEventListener("click", buyInvestment);
+        document.getElementById("endTurnButton").addEventListener("click", endTurn);
+
+        // Initial setup
+        displayPortfolio();
+        updateInvestmentDropdown();
+
+        function updateDate() {
+            document.getElementById("currentDate").innerText = getFormattedDate(currentDate);
+        }
+
+        // Function to get a formatted date string (e.g., "January 1, 2025")
+        function getFormattedDate(date) {
+            const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            const month = months[date.getMonth()];
+            const day = date.getDate();
+            const year = date.getFullYear();
+            return `${month} ${day}, ${year}`;
+        }
+
+        // Function to add a log message to the game log
+        function addToGameLog(message) {
+            const gameLog = document.getElementById("gameLog");
+            const li = document.createElement("li");
+            li.innerText = message;
+            gameLog.prepend(li);
+    }
+
+
+        // Call updateDate function initially to set the starting date on the screen
+        updateDate();
+
+        document.getElementById("buyButton").addEventListener("click", buyInvestment);
+        document.getElementById('buyMaxButton').addEventListener('click', buyMaxInvestments);
+        document.getElementById("sellButton").addEventListener("click", sellInvestment);
+        document.getElementById("sellAllButton").addEventListener("click", sellAllShares);
+        document.getElementById("endTurnButton").addEventListener("click", endTurn);
+        document.getElementById("restartButton").addEventListener("click", function () {
+            location.reload();
+        document.getElementById("LevelSelect").addEventListener("click", function () {
+            location.reload();
+        
+        })
+    });
+        
+    </script>
+</body>
+</html>

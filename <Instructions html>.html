@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invest GPT</title>
+    <style>
+        /* CSS styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #bcc0cd;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding-bottom: 40px; 
+}
+
+        .title {
+            text-align: center;
+            color: #022e17;
+        }
+
+        .menu {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .menu-link {
+            margin: 10px;
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .menu-link:hover {
+            background-color: #2980b9;
+        }
+
+        .back-to-game {
+            display: block;
+            margin-top: 20px;
+            text-align: center;
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        .back-to-game:hover {
+            text-decoration: underline;
+        }
+
+        .made-by {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            padding: 10px;
+            background-color: #302e2e;
+            color: #888;
+            font-size: 12px;
+        }
+
+        .readInstructions {
+            text-align: center;
+            color: #022e17;
+        }
+        
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Instructions</h1>
+        <div class="menu">
+            <button onclick="readInstructions()" class="menu-link">Voiced Instructions</button>
+        </div>
+        <div class="instructions">
+            <p>Welcome to Invest GPT</p>
+            <p>You have been built to serve as a personal stock investor. Your goal is to build a profitable investment portfolio and reach certain financial goals. You can buy and sell various types of investments, each with its own growth rate and outlook.</p>
+            <p>After making your investment decisions and ending your turn the prices of investments will fluctuate based on their growth rates and outlooks. Your portfolio value will change accordingly, and your cash balance will be updated based on your buying and selling activities.</p>
+            <p>Your ultimate objective is to reach your financial goal set for you by making the correct investment decisions. You are the latest in a long line of Investment AIs.</p>
+            <p>Do your best to ensure your client's satisfaction and that a replacement is not required.</p>
+        </div>
+        <div class="menu">
+            <button onclick="OptionsPage()" class="menu-link">Select Options</button>
+        </div>
+    </div>
+    <div style="height: 20px;"></div>
+    <div class="made-by">
+        <p>Made by Jon</p>
+    </div>
+
+    <!-- Script to read the page text aloud when the button is clicked -->
+    <script>
+        function readInstructions() {
+            const textToRead = document.querySelector('.instructions').innerText;
+            const utterance = new SpeechSynthesisUtterance(textToRead);
+            utterance.rate = 0.8; // Adjust the speech rate if needed 
+            speechSynthesis.speak(utterance);
+        }
+
+        function OptionsPage() {
+                window.location.href = '<Instructions html2>.html';
+
+        }
+
+        // Get the goal percentage input and pass it to the game page
+        const goalPercentage = parseFloat(document.getElementById('goalPercentageInput').value);
+        localStorage.setItem('goalPercentage', goalPercentage);
+    </script>
+</body>
+</html>
